@@ -1,44 +1,23 @@
 import { PrismaClient } from '@prisma/client';
+// @ts-ignore
+import * as bcrypt from 'bcrypt';
+
 const prisma = new PrismaClient();
 
 async function main() {
-  const usersData = [
-    {
-      name: 'Usuario Basic',
-      email: 'basic@test.com',
-      password: '123456', // puedes hashear si quieres
-      role: 'BASIC',
-    },
-    {
-      name: 'Usuario Premium',
-      email: 'premium@test.com',
-      password: '123456',
-      role: 'PREMIUM',
-    },
-    {
-      name: 'Usuario Pro',
-      email: 'pro@test.com',
-      password: '123456',
-      role: 'PRO',
-    },
+  const users = [
+    { name: 'Usuario Free', email: 'free@test.com', password: await bcrypt.hash('123456', 10), role: 'FREE' },
+    { name: 'Usuario Basic', email: 'basic@test.com', password: await bcrypt.hash('123456', 10), role: 'BASIC' },
+    { name: 'Usuario Premium', email: 'premium@test.com', password: await bcrypt.hash('123456', 10), role: 'PREMIUM' },
   ];
 
-  for (const userData of usersData) {
-    await prisma.user.upsert({
-      where: { email: userData.email },
-      update: {},
-      create: userData,
-    });
+  for (const user of users) {
+    await prisma.user.create({ data: user });
   }
 
-  console.log('✅ Usuarios de prueba creados!');
+  console.log('Usuarios seed creados!');
 }
 
 main()
-  .catch(e => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(e => console.error(e))
+  .finally(async () => await prisma.$disconnect());
